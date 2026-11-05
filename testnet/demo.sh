@@ -2,7 +2,7 @@
 # Testnet demo of the RWA yield-sharing strategy behind a DeFindex vault. One subcommand per
 # step; every transaction is appended to demo/rwa-yield-sharing/run-log.md with its hash.
 #
-#   ./demo.sh fund <user> <usdc>            mint test USDC to ts-alice / ts-bob
+#   ./demo.sh fund <user|G...> <usdc>       mint test USDC to ts-alice / ts-bob or any address
 #   ./demo.sh deposit <user> <usdc>         user deposits into the vault (stays idle in the vault)
 #   ./demo.sh rebalance <usdc>              vault manager moves idle USDC into the strategy
 #   ./demo.sh invest <usdc>                 strategy keeper buys TBOND on the pool with strategy idle USDC
@@ -50,7 +50,8 @@ status() {
 
 case "${1:-}" in
   fund)
-    tx "Mint $3 TUSDC to $2" "$USDC" "$ADMIN_ID" -- mint --to "$(addr "$2")" --amount "$(amt "$3")" ;;
+    to="$2"; [[ "$to" == G* ]] || to="$(addr "$2")"
+    tx "Mint $3 TUSDC to $2" "$USDC" "$ADMIN_ID" -- mint --to "$to" --amount "$(amt "$3")" ;;
   deposit)
     a="$(amt "$3")"
     tx "$2 deposits $3 TUSDC into the vault" "$VAULT" "$2" -- deposit --amounts_desired "[\"$a\"]" --amounts_min "[\"$a\"]" --from "$(addr "$2")" --invest false ;;
