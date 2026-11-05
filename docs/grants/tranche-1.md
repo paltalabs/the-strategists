@@ -44,7 +44,7 @@ Internal tracking doc. Maps every Tranche 1 deliverable to its evidence and list
 3. **Venue**: the constructor checks the pool's token set live. Check whether Aquarius runs a
    testnet router; if not, deploy the vendored Aquarius wasm from `external-contracts/` and
    create a USDC/RWA pool with liquidity.
-4. **Strategy**: `contracts/rwa-yield-sharing/scripts/deploy.sh testnet ... custom` with the
+4. **Strategy**: `contracts/stablebond-wrapper-strategy/scripts/deploy.sh testnet ... custom` with the
    addresses above.
 5. **Vault**: create a DeFindex vault on testnet through the factory
    (`CDSCWE4GLNBYYTES2OCYDFQA2LLY4RBIAX6ZI32VSUXD7GO6HRPO4A32`, from DeFindex's public testnet

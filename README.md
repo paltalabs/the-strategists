@@ -12,7 +12,7 @@ is to make that yield measurable as growth of the vault's base asset.
 
 | Strategy | Path | Status |
 |---|---|---|
-| RWA Yield-Sharing (tokenized stablebonds: USTRY, USDY, deJTRSY, CETES) | [`contracts/rwa-yield-sharing`](contracts/rwa-yield-sharing) | Implemented, testnet demo in progress |
+| RWA Yield-Sharing (tokenized stablebonds: USTRY, USDY, deJTRSY, CETES) | [`contracts/stablebond-wrapper-strategy`](contracts/stablebond-wrapper-strategy) | Implemented, testnet demo in progress |
 | XLM and stablecoin liquidity on Aquarius | `contracts/aquarius-lp` (planned) | Planned |
 | Bridge liquidity on Allbridge | `contracts/allbridge-lp` (planned) | Planned |
 

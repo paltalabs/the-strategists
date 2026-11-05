@@ -1,0 +1,22 @@
+[package]
+name = "stablebond_wrapper_strategy"
+edition = "2021"
+authors = ["coderipper <joaquin@paltalabs.io>"]
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+defindex-strategy-core = { version = "0.3.0" }
+# SEP-40 price feed (Reflector-shaped). Used in production paths (deposit/withdraw/balance)
+# to cross-check the on-chain Aqua quote, so it is a normal dependency, not dev-only.
+sep-40-oracle = { version = "1.4.0" }
+# 1.5.0+ required: 1.3.0/1.4.0 carry CVE-2026-24783 (signed fixed-point rounding bug)
+soroban-fixed-point-math = "1.5.0"
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+sep-40-oracle = { version = "1.4.0", features = ["testutils"] }
