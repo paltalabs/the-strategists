@@ -1,7 +1,7 @@
 //! Sushi (Uniswap v3 style) pool called directly. Ordering is load-bearing: read the oracle
 //! hints, THEN grant the pool's token pull, THEN swap. A grant is scoped to the next
-//! invocation's subtree, so a grant made before the hints read is consumed by it
-//! (`aggregator-v3 venues/sushi.rs:44-53`). The price bound is the extreme tick bound for
+//! invocation's subtree, so a grant made before the hints read is consumed by it.
+//! The price bound is the extreme tick bound for
 //! the direction, so the pool only stops short on exhausted liquidity and `min_out` is the
 //! guarantee. The received leg is the negative field of `SwapResult`.
 

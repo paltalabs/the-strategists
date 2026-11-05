@@ -1,7 +1,7 @@
 //! External contract ABIs the strategy calls. Each trait carries only the functions used.
 //! Wire structs are `#[contracttype(export = false)]`: an ScMap is keyed by field name, so
 //! the names below are the on-chain format and must not change. Interfaces fetched with
-//! `stellar contract info interface` on 2026-09-22 from mainnet:
+//! `stellar contract info interface` from mainnet:
 //!   Aqua pool CCX2TYR4AQTPPMTZOIMP3YIBHAYLLSTXVP47PAGTL753PCQFSKV32MIA (USTRY/USDC),
 //!   Sushi pool CDMJRRH5MAJLB7T5SQAWQOOL7UJ3BABGTURSVKIE6AEDSXESDDJIBVCT (deJTRSY/USDC),
 //!   RedStone adapter CAEGYZFAJ3HLSDBUIVJ77SK5HLLS4MPE4LO5OB2W3L2TEDMAS6RCTMZ4 (USTRY).

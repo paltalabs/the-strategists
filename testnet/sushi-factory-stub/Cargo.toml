@@ -1,0 +1,24 @@
+# Testnet-only helper, outside the main workspace so it never touches the strategy's build.
+[package]
+name = "sushi_factory_stub"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = "25.3.1"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[workspace]
