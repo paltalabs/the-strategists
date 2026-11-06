@@ -1,6 +1,10 @@
 # Tranche 1: Yield-Sharing Strategy for Yield-Bearing Assets
 
-Internal tracking doc. Maps every Tranche 1 deliverable to its evidence and lists what is left.
+Maps every Tranche 1 deliverable to its evidence.
+
+- Live dApp: https://the-strategists-demo.vercel.app
+- Deployment and scenario: [`demo/rwa-yield-sharing`](../../demo/rwa-yield-sharing/README.md)
+- Every demo transaction: [`run-log.md`](../../demo/rwa-yield-sharing/run-log.md)
 
 ## Completion criteria (from the submission)
 
@@ -19,7 +23,7 @@ Internal tracking doc. Maps every Tranche 1 deliverable to its evidence and list
 - **Demo through a DeFindex vault on testnet plus a simple testnet dApp** that shows the vault
   and strategy state and lets anyone deposit and withdraw.
 
-## Status per deliverable
+## Deliverables
 
 | Deliverable | Status | Evidence |
 |---|---|---|
@@ -32,9 +36,9 @@ Internal tracking doc. Maps every Tranche 1 deliverable to its evidence and list
 | Compatible with partner integrations | Done | Standard DeFindex vault interface; testnet dApp |
 | Testnet deployment | Done | `testnet.contracts.json`, `demo/rwa-yield-sharing/README.md` |
 | Test scenarios: deposits, accrual over time, attribution and sharing | Done | `demo/rwa-yield-sharing/run-log.md` (every tx hash) |
-| Testnet dApp | Done | `app/`: User tab (deposit, withdraw, revenue split) and Admin tab (rebalance, fees, keeper, oracle, mint) |
+| Testnet dApp | Done | https://the-strategists-demo.vercel.app (`app/`): User tab (faucet, deposit, withdraw, revenue split) and Admin tab (rebalance, fees, keeper, oracle, mint) |
 | Live for reviewers | Done | Faucet (`testnet/faucet`), dApp "Get test tokens", `testnet/keeper.sh loop` keeps NAV, pool, allocation and revenue share moving |
-| Publish documentation | Open | The repo is private; decide where the docs are published |
+| Published documentation | Done | This repository: `docs/strategies/rwa-yield-sharing/` |
 
 ## Testnet stack
 
@@ -45,7 +49,7 @@ helpers live outside the Cargo workspace so they never touch the strategy build:
 receiver, an account we do not control, can be paid) and `testnet/sushi-factory-stub` (the pool
 reads its protocol fee from a factory).
 
-Things learned on the way:
+Notes for anyone reproducing the stack:
 
 - The vault constructor traps when "DeFindex-Vault-" plus the vault name exceeds 32 characters.
 - Reflector stops answering one resolution (1 h) after the last push: run `push_nav.sh` hourly
@@ -53,7 +57,3 @@ Things learned on the way:
 - `lock_fees` works on the stored report; call `report` first so it sees the latest gains.
 - A withdrawal that sells RWA reverts while the pool trades more than `slippage_bps` under the
   oracle rate; the demo arbitrages the pool first (`demo.sh arb`).
-
-## Open questions
-
-- Where to publish the documentation (public repo, docs site, or a public page per tranche).
