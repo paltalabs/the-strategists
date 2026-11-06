@@ -3,8 +3,8 @@
 # Toggle auto_invest on a deployed RWA yield-sharing strategy.
 #
 # When ON, every deposit that lands while pricing is Live buys one best-effort tranche of at
-# most max_swap on arrival. Leave it OFF, during migration and after it (decided
-# 2026-11-05): deposits land as idle USDC at par with no swap, and the keeper invests idle back
+# most max_swap on arrival. Leave it OFF in normal operation: deposits land as idle USDC at
+# par with no swap, and the keeper invests idle back
 # toward the target buffer on a schedule with invest_otc.sh / invest.sh. Kept for an emergency
 # or a later decision, not for normal operation.
 #
