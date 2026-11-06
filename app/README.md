@@ -46,7 +46,7 @@ rebuild.
 ## What it reads and calls
 
 Contract specs are fetched from chain with `contract.Client.from` (no generated bindings).
-RPC: `https://soroban-testnet.stellar.org`.
+RPC: `https://soroban-rpc.testnet.stellar.gateway.fm` by default; set `VITE_RPC_URL` at build time to use another.
 
 | Contract | Method | Use |
 |---|---|---|

@@ -6,6 +6,12 @@ import { Asset, Keypair, Operation, TransactionBuilder, contract, rpc, xdr } fro
 import { NETWORK_PASSPHRASE, RPC_URL } from './config';
 
 export const server = new rpc.Server(RPC_URL);
+// The SDK adds X-Client-Name / X-Client-Version to every RPC call. Some public RPCs
+// (gateway.fm) do not list them in their CORS allowed headers, so the browser's preflight
+// fails. Drop them; every client below shares this server.
+for (const h of ['X-Client-Name', 'X-Client-Version']) {
+  delete (server.httpClient.defaults.headers as Record<string, unknown>)[h];
+}
 
 /** Spec fetch (instance + Wasm, two RPC calls) and single simulations. The public testnet
  * RPC can take several seconds per call, so these are generous but finite: a stuck request
@@ -33,7 +39,7 @@ const clientCache = new Map<string, Promise<AnyClient>>();
 export function getClient(contractId: string): Promise<AnyClient> {
   let cached = clientCache.get(contractId);
   if (!cached) {
-    cached = contract.Client.from({ contractId, networkPassphrase: NETWORK_PASSPHRASE, rpcUrl: RPC_URL }) as Promise<AnyClient>;
+    cached = contract.Client.from({ contractId, networkPassphrase: NETWORK_PASSPHRASE, rpcUrl: RPC_URL, server }) as Promise<AnyClient>;
     // Do not cache a failure (e.g. contract not deployed yet): retry on the next refresh.
     cached.catch(() => clientCache.delete(contractId));
     clientCache.set(contractId, cached);

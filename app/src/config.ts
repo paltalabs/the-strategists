@@ -6,7 +6,8 @@
 // "not deployed yet" state.
 
 export const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
-export const RPC_URL = 'https://soroban-testnet.stellar.org';
+/** Testnet Soroban RPC. Override at build time with VITE_RPC_URL. */
+export const RPC_URL: string = import.meta.env.VITE_RPC_URL || 'https://soroban-rpc.testnet.stellar.gateway.fm';
 export const EXPLORER_TX = 'https://stellar.expert/explorer/testnet/tx/';
 export const EXPLORER_CONTRACT = 'https://stellar.expert/explorer/testnet/contract/';
 export const EXPLORER_ACCOUNT = 'https://stellar.expert/explorer/testnet/account/';
