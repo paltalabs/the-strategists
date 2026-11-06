@@ -10,6 +10,8 @@
 #   ./demo.sh arb                           LP buys TBOND on the pool until its price is back near NAV
 #   ./demo.sh fees                          vault reports gains, locks the vault fee on them, distributes it
 #   ./demo.sh withdraw <user> <shares|all>  user withdraws from the vault
+#   ./demo.sh claim <user>                  user claims test TUSDC and TBOND from the faucet
+#   ./demo.sh refill                        admin tops the faucet up (1M TUSDC, 100k TBOND)
 #   ./demo.sh status                        prints vault, strategy and participant balances
 source "$(dirname "${BASH_SOURCE[0]}")/_env.sh"
 
@@ -80,6 +82,11 @@ case "${1:-}" in
     u="$(addr "$2")"
     s="$3"; [[ "$s" == all ]] && s="$(view "$VAULT" -- balance --id "$u" | tr -d '"')" || s="$(amt "$s")"
     tx "$2 withdraws $(fmt "$s") shares" "$VAULT" "$2" -- withdraw --withdraw_shares "$s" --min_amounts_out '["0"]' --from "$u" ;;
+  claim)
+    tx "$2 claims test tokens from the faucet" "$(state_get faucet)" "$2" -- claim --to "$(addr "$2")" ;;
+  refill)
+    tx "Faucet refilled with TUSDC" "$USDC" "$ADMIN_ID" -- mint --to "$(state_get faucet)" --amount "$(amt 1000000)"
+    tx "Faucet refilled with TBOND" "$RWA" "$ADMIN_ID" -- mint --to "$(state_get faucet)" --amount "$(amt 100000)" ;;
   status) status ;;
-  *) sed -n 2,14p "$0"; exit 1 ;;
+  *) sed -n 2,16p "$0"; exit 1 ;;
 esac

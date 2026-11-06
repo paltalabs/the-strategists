@@ -5,6 +5,7 @@
 #   3. a Sushi concentrated pool TBOND/TUSDC at 1.0, full-range liquidity
 #   4. the strategy (exact production wasm)
 #   5. a DeFindex vault from the public testnet factory holding the strategy
+#   6. a faucet (testnet/faucet) anyone can claim test TUSDC and TBOND from
 # Usage: ./setup.sh
 source "$(dirname "${BASH_SOURCE[0]}")/_env.sh"
 
@@ -106,6 +107,20 @@ fi
 if [[ "$(view "$STRATEGY" -- is_depositor --depositor "$VAULT")" != true ]]; then
   log "allowlisting the vault on the strategy"
   inv "$STRATEGY" "$ADMIN_ID" -- add_depositor --depositor "$VAULT" >/dev/null
+fi
+
+# --- 6. Faucet ---------------------------------------------------------------------
+# The tokens' admin is fixed, so the faucet hands out a pre-minted balance; refill with
+# ./demo.sh refill. Per claim: 10,000 TUSDC and 1,000 TBOND, once an hour per address.
+FAUCET="$(state_get faucet)"
+if [[ -z "$FAUCET" ]]; then
+  log "deploying the faucet"
+  (cd "$HERE/faucet" && stellar contract build >/dev/null)
+  FAUCET="$(retry stellar contract deploy --wasm "$HERE/faucet/target/wasm32v1-none/release/test_faucet.wasm" --source-account "$ADMIN_ID" --network "$NET" -- \
+    --tokens "[\"$USDC\",\"$RWA\"]" --amounts '["100000000000","10000000000"]' --cooldown 3600 | tail -1)"
+  state_set faucet "$FAUCET"
+  inv "$USDC" "$ADMIN_ID" -- mint --to "$FAUCET" --amount 1000000000000000 >/dev/null   # 100M TUSDC
+  inv "$RWA" "$ADMIN_ID" -- mint --to "$FAUCET" --amount 100000000000000 >/dev/null    # 10M TBOND
 fi
 
 log "done"
