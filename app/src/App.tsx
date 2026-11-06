@@ -9,6 +9,8 @@ import {
   type VaultState,
 } from './data';
 import { errorMessage, shortAddress } from './format';
+import { AdminPanel } from './AdminPanel';
+import { FaucetCard } from './FaucetCard';
 import { PositionCard } from './PositionCard';
 import { StrategyCard } from './StrategyCard';
 import { VaultCard } from './VaultCard';
@@ -66,12 +68,20 @@ async function loadInto<T>(load: () => Promise<T>, set: Dispatch<SetStateAction<
   }
 }
 
+type Tab = 'user' | 'admin';
+
+const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
+  { id: 'user', label: 'User' },
+  { id: 'admin', label: 'Admin' },
+];
+
 function Dashboard(props: { contracts: Contracts; address: string | null }) {
   const { contracts, address } = props;
   const [vault, setVault] = useState<CardState<VaultState>>(EMPTY_CARD);
   const [strategy, setStrategy] = useState<CardState<StrategyState>>(EMPTY_CARD);
   const [position, setPosition] = useState<CardState<Position>>(EMPTY_CARD);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [tab, setTab] = useState<Tab>('user');
   const inFlight = useRef<{ address: string | null; promise: Promise<void> } | null>(null);
   const addressRef = useRef(address);
   addressRef.current = address;
@@ -98,6 +108,8 @@ function Dashboard(props: { contracts: Contracts; address: string | null }) {
     return promise;
   }, [contracts, address]);
 
+  const onTxDone = useCallback((): void => void refresh(), [refresh]);
+
   useEffect(() => {
     setPosition(EMPTY_CARD);
     let cancelled = false;
@@ -122,18 +134,41 @@ function Dashboard(props: { contracts: Contracts; address: string | null }) {
           Refresh now
         </button>
       </p>
-      <div className="grid">
-        <VaultCard contracts={contracts} vault={vault.data} error={vault.error} />
-        <StrategyCard contracts={contracts} strategy={strategy.data} error={strategy.error} />
-        <PositionCard
+      <nav className="tabs" role="tablist">
+        {TABS.map((t) => (
+          <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </nav>
+      {tab === 'user' ? (
+        <div className="grid">
+          <VaultCard contracts={contracts} vault={vault.data} error={vault.error} />
+          <StrategyCard contracts={contracts} strategy={strategy.data} error={strategy.error} />
+          <PositionCard
+            contracts={contracts}
+            address={address}
+            vault={vault.data}
+            position={position.data}
+            error={position.error}
+            onTxDone={onTxDone}
+          />
+          <FaucetCard
+            contracts={contracts}
+            address={address}
+            accountExists={position.data?.accountExists ?? null}
+            onTxDone={onTxDone}
+          />
+        </div>
+      ) : (
+        <AdminPanel
           contracts={contracts}
           address={address}
           vault={vault.data}
-          position={position.data}
-          error={position.error}
-          onTxDone={() => void refresh()}
+          strategy={strategy.data}
+          onTxDone={onTxDone}
         />
-      </div>
+      )}
     </>
   );
 }

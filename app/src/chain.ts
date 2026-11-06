@@ -49,13 +49,26 @@ function methodOf(client: AnyClient, method: string): Method {
   return fn as Method;
 }
 
-/** Unwraps a contract `Result<T, E>` (Ok/Err from the SDK); plain values pass through. */
-function unwrapResult(value: unknown): unknown {
+/** The `Error(Contract, #N)` part of a failed simulation, the most useful bit for a human. */
+function simulationErrorText(tx: contract.AssembledTransaction<unknown>): string | null {
+  const sim = tx.simulation;
+  if (!sim || !rpc.Api.isSimulationError(sim)) return null;
+  return sim.error.match(/Error\([A-Za-z]+, #?\w+\)/)?.[0] ?? sim.error.split('\n')[0];
+}
+
+/**
+ * Unwraps a contract `Result<T, E>` (Ok/Err from the SDK); plain values pass through.
+ * The SDK's Err carries the error's doc text, often empty, so the code from the
+ * simulation is added.
+ */
+function unwrapResult(tx: contract.AssembledTransaction<unknown>): unknown {
+  const value = tx.result;
   if (typeof value === 'object' && value !== null && 'isOk' in value && 'unwrap' in value) {
     const result = value as contract.Result<unknown>;
     if (!result.isOk()) {
       const err = result.unwrapErr() as { message?: string };
-      throw new Error(err.message ?? 'Contract returned an error');
+      const parts = [err.message, simulationErrorText(tx)].filter((p): p is string => !!p);
+      throw new Error(parts.length > 0 ? `Contract returned an error: ${parts.join(' ')}` : 'Contract returned an error');
     }
     return result.unwrap();
   }
@@ -70,7 +83,7 @@ export async function simulate<T>(contractId: string, method: string, args?: Rec
   // A pending spec fetch stays cached, so a timeout here does not restart it next refresh.
   const client = await withTimeout(getClient(contractId), SPEC_TIMEOUT_MS, `Loading contract spec for ${method}`);
   const tx = await withTimeout(methodOf(client, method).call(client, args), READ_TIMEOUT_MS, `Reading ${method}`);
-  return unwrapResult(tx.result) as T;
+  return unwrapResult(tx) as T;
 }
 
 export type Signer = (txXdr: string) => Promise<string>;
@@ -103,8 +116,8 @@ export async function invoke(
   const readClient = await getClient(contractId);
   const client = new contract.Client(readClient.spec, { ...readClient.options, publicKey: source }) as AnyClient;
   const tx = await methodOf(client, method).call(client, args);
-  // A simulation failure means the call would revert; surface it before asking for a signature.
-  void tx.result;
+  // A failed simulation or an Err result means the call would revert: stop before the wallet.
+  unwrapResult(tx);
   const signed = await sign(tx.toXdr());
   return sendSigned(signed);
 }

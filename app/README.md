@@ -2,7 +2,14 @@
 
 A small dApp for Stellar testnet. It shows a DeFindex vault that earns from one RWA yield
 strategy, with the vault state, the strategy's pricing and holdings, and how gains are split.
-A connected wallet can deposit and withdraw.
+It has two tabs:
+
+- **User** (default): vault, strategy and the connected wallet's position, with deposit and
+  withdraw, plus "Get test tokens": Friendbot for XLM and the faucet for TUSDC and TBOND.
+- **Admin**: one card per role (vault managers, strategy keeper and admin, oracle and test
+  token admin) with a button per privileged method. Each card shows who holds the role, and
+  its buttons are enabled only when the connected wallet is that holder. To use them, import
+  the deploy script's `ts-admin` (and `ts-keeper` for invest/divest) key into your wallet.
 
 ## Run
 
@@ -13,8 +20,9 @@ npm run build    # type-check + production build into dist/
 ```
 
 You need a Stellar wallet on **Testnet** (Freighter or any wallet the Stellar Wallets Kit
-lists). Fund the account with testnet XLM from Friendbot. Test USDC is not available from a
-faucet here: ask the team for some. A classic-asset token needs a trustline first; when the
+lists). Fund the account with testnet XLM from Friendbot. Test USDC comes from the faucet
+card (10,000 TUSDC and 1,000 TBOND per claim, once an hour), the Admin tab's Mint button, or
+`testnet/demo.sh fund <G...> <amount>`. A classic-asset token needs a trustline first; when the
 USDC token is a classic asset (its `name()` reads `CODE:ISSUER`), the app shows an
 "Add trustline" button.
 
@@ -52,6 +60,23 @@ RPC: `https://soroban-testnet.stellar.org`.
 | Strategy | `get_pricing_state()`, `get_config()`, `get_params()`, `balance(from=vault)` | mode, rate, decimals, venue, caps |
 | Strategy | instance storage `LastValidPrice`, `AnchorTs` | the anchor (no getter exists) |
 | USDC / RWA tokens | `balance(id)`, `symbol()`, `decimals()`, `name()` | holdings and labels |
+
+Admin tab (all signed by the connected wallet; a call that would revert is stopped at
+simulation and shows the contract error code instead of opening the wallet):
+
+| Contract | Method | Role |
+|---|---|---|
+| Vault | `get_manager()`, `get_rebalance_manager()`, `get_emergency_manager()` | role holders |
+| Vault | `rebalance(caller, [Invest(strategy, amount)])` / `[Unwind(strategy, amount)]` | manager or rebalance manager |
+| Vault | `report()`, `lock_fees(None)`, `distribute_fees(caller)` | manager; run in that order |
+| Strategy | `invest(usdc_amount)`, `divest(usdc_target)` | keeper |
+| Strategy | `pause_deposits(caller, paused)` | admin or keeper |
+| Oracle | `admin()`, `decimals()`, `resolution()`, `lastprice(asset)`, `last_timestamp()`, `price(asset, ts)` | NAV and whether it is live |
+| Oracle | `set_price([nav], slot_ms)` | oracle admin; re-push the last NAV hourly to keep it live |
+| Test USDC | `mint(to, amount)` | token admin (`admin` in `testnet.contracts.json`) |
+
+Faucet (`faucet` in `testnet.contracts.json`, optional): `config()`, `next_claim(to)` and
+`claim(to)`, signed by the connected wallet.
 
 The revenue split: depositors keep `1 − vault_fee` of gains; the partner gets
 `vault_fee × (1 − protocol_rate)` and infrastructure `vault_fee × protocol_rate`.

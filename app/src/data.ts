@@ -48,6 +48,8 @@ interface StrategyConfig {
 }
 
 interface StrategyParams {
+  admin: string;
+  keeper: string;
   oracles: unknown[];
   max_swap: bigint;
   max_invested: bigint;
@@ -217,4 +219,72 @@ export async function loadPosition(c: Contracts, account: string): Promise<Posit
     simulate<bigint>(c.vault, 'balance', { id: account }),
   ]);
   return { accountExists: exists, trustline, usdcBalance, shares };
+}
+
+interface PriceData {
+  price: bigint;
+  timestamp: bigint;
+}
+
+export interface Roles {
+  vaultManager: string;
+  rebalanceManager: string;
+  emergencyManager: string;
+  feeReceiver: string;
+  strategyAdmin: string;
+  strategyKeeper: string;
+  oracleAdmin: string | null;
+  tokenAdmin: string | null;
+  oracleDecimals: number;
+  oracleResolutionMs: number;
+  /** Last NAV pushed to the oracle for the RWA (timestamp in seconds), null if none. */
+  oracleNav: PriceData | null;
+  /** False once the last push is too old for the oracle to answer `lastprice`. */
+  oracleLive: boolean;
+}
+
+/**
+ * `lastprice` turns null once the last push is a slot too old, but `price` at
+ * `last_timestamp` still returns that push, so the admin can re-push the same NAV.
+ */
+async function loadLastPushedNav(c: Contracts): Promise<{ nav: PriceData | null; live: boolean }> {
+  const asset = { tag: 'Stellar', values: [c.rwa] };
+  const [last, lastTs] = await Promise.all([
+    simulate<PriceData | null>(c.oracle, 'lastprice', { asset }),
+    simulate<bigint>(c.oracle, 'last_timestamp'),
+  ]);
+  if (last) return { nav: last, live: true };
+  if (lastTs === 0n) return { nav: null, live: false };
+  const stale = await simulate<PriceData | null>(c.oracle, 'price', { asset, timestamp: lastTs });
+  return { nav: stale ?? null, live: false };
+}
+
+/** Who holds each role the admin tab can act as, plus the oracle's last NAV. */
+export async function loadRoles(c: Contracts): Promise<Roles> {
+  const [vaultManager, rebalanceManager, emergencyManager, feeReceiver, params, oracleAdmin, oracleDecimals, oracleResolutionMs, oracleNav] =
+    await Promise.all([
+      simulate<string>(c.vault, 'get_manager'),
+      simulate<string>(c.vault, 'get_rebalance_manager'),
+      simulate<string>(c.vault, 'get_emergency_manager'),
+      simulate<string>(c.vault, 'get_fee_receiver'),
+      simulate<StrategyParams>(c.strategy, 'get_params'),
+      simulate<string | null>(c.oracle, 'admin'),
+      simulate<number>(c.oracle, 'decimals'),
+      simulate<number>(c.oracle, 'resolution'),
+      loadLastPushedNav(c),
+    ]);
+  return {
+    vaultManager,
+    rebalanceManager,
+    emergencyManager,
+    feeReceiver,
+    strategyAdmin: params.admin,
+    strategyKeeper: params.keeper,
+    oracleAdmin: oracleAdmin ?? null,
+    tokenAdmin: c.token_admin,
+    oracleDecimals,
+    oracleResolutionMs,
+    oracleNav: oracleNav.nav,
+    oracleLive: oracleNav.live,
+  };
 }

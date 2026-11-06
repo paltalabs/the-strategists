@@ -21,9 +21,13 @@ export interface Contracts {
   vault: string;
   partner: string;
   defindex_receiver: string;
+  /** Admin of the test tokens (mint). Only the deploy script knows it; null if absent. */
+  token_admin: string | null;
+  /** Test token faucet, null if not deployed. */
+  faucet: string | null;
 }
 
-const REQUIRED_KEYS: ReadonlyArray<keyof Contracts> = [
+const REQUIRED_KEYS: ReadonlyArray<Exclude<keyof Contracts, 'token_admin' | 'faucet'>> = [
   'usdc',
   'rwa',
   'oracle',
@@ -51,7 +55,11 @@ function parseContracts(raw: unknown): { contracts: Contracts | null; problem: s
   if (missing.length > 0) {
     return { contracts: null, problem: `testnet.contracts.json is missing: ${missing.join(', ')}` };
   }
-  const contracts = Object.fromEntries(REQUIRED_KEYS.map((k) => [k, record[k] as string])) as unknown as Contracts;
+  const contracts = {
+    ...(Object.fromEntries(REQUIRED_KEYS.map((k) => [k, record[k] as string])) as Omit<Contracts, 'token_admin' | 'faucet'>),
+    token_admin: typeof record.admin === 'string' ? record.admin : null,
+    faucet: typeof record.faucet === 'string' && record.faucet !== '' ? record.faucet : null,
+  };
   return { contracts, problem: null };
 }
 

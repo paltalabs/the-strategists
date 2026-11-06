@@ -110,3 +110,14 @@ input { flex: 1; min-width: 0; padding: 9px 10px; border-radius: 8px; border: 1p
 .notice-msg { flex-basis: 100%; word-break: break-word; }
 .error { background: var(--err-bg); color: var(--err); padding: 8px 10px; border-radius: 8px; font-size: 0.85rem; word-break: break-word; }
 .warn { background: var(--warn-bg); color: var(--warn); padding: 8px 10px; border-radius: 8px; font-size: 0.85rem; margin: 0 0 12px; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tabs button { background: none; border: none; border-bottom: 2px solid transparent; padding: 8px 14px; font-size: 0.95rem; font-weight: 600; color: var(--muted); cursor: pointer; margin-bottom: -1px; }
+.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+.actions { display: grid; gap: 4px; margin-top: 8px; }
+.action { display: flex; flex-direction: column; gap: 6px; }
+.action h3 { margin-top: 12px; margin-bottom: 0; }
+.action-hint { margin: 0; }
+.btn-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.you { margin-left: 6px; padding: 1px 7px; font-size: 0.7rem; }
+.steps { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 6px; font-size: 0.9rem; }

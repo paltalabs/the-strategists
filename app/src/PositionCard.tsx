@@ -207,8 +207,8 @@ export function PositionCard(props: Props) {
       </div>
       <TxNotice status={tx} />
       <p className="muted small">
-        Test {sym} is not available from a faucet here: ask the team for some. A classic-asset token needs a trustline before
-        your account can receive it.
+        Test {sym} comes from the faucet ("Get test tokens"). A classic-asset token needs a trustline before your
+        account can receive it.
       </p>
     </Card>
   );
