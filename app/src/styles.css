@@ -90,13 +90,13 @@ footer { margin-top: 24px; text-align: center; }
 .btn-small { padding: 5px 10px; font-size: 0.8rem; }
 .link { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: inherit; }
 
-.forms { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 480px) { .forms { grid-template-columns: 1fr; } }
+.forms { display: grid; grid-template-columns: 1fr; gap: 4px; }
+.form + .form { border-top: 1px solid var(--border); padding-top: 4px; margin-top: 8px; }
 .form { display: flex; flex-direction: column; gap: 8px; }
 .form h3 { margin-top: 12px; }
 .input-row { display: flex; gap: 6px; }
 input { flex: 1; min-width: 0; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.95rem; }
-.toggle { display: flex; gap: 4px; }
+.toggle { display: flex; gap: 4px; max-width: 200px; }
 .toggle button { flex: 1; padding: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 6px; cursor: pointer; }
 .toggle button.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 

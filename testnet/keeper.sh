@@ -3,8 +3,8 @@
 #   1. pushes the TBOND NAV, grown at NAV_APY_BPS a year (the oracle expires an hour after
 #      the last push, which would put the strategy in OracleDown)
 #   2. arbitrages the pool back toward NAV with the LP account when it drifts past ARB_BAND_BPS
-#   3. moves idle vault USDC into the strategy and has the keeper buy TBOND with it,
-#      keeping a buffer idle in both for withdrawals
+#   3. moves idle vault USDC into the strategy (kept at par; the RWA is bought OTC),
+#      keeping a buffer idle in the vault for withdrawals
 #   4. every FEES_EVERY_S, runs the revenue share: report, lock_fees, distribute_fees
 # Every step is best effort: a failure is logged and the next tick tries again.
 # Usage: ./keeper.sh once | ./keeper.sh loop [seconds, default 1800]
@@ -14,7 +14,6 @@ NAV_APY_BPS=500
 ARB_BAND_BPS=50
 ARB_STEP_USDC=10000
 VAULT_BUFFER_USDC=5000
-STRATEGY_BUFFER_USDC=5000
 FEES_EVERY_S=21600
 
 USDC="$(state_get usdc)"; RWA="$(state_get rwa)"; POOL="$(state_get pool)"
@@ -69,20 +68,16 @@ arb() {
 }
 
 allocate() {
-  local idle sidle step
+  local idle step
   idle="$(view "$USDC" -- balance --id "$VAULT" | raw)"
   step="$(py 'import sys; i,b=map(int,sys.argv[1:]); print(max(0,i-b))' "$idle" "$(units "$VAULT_BUFFER_USDC")")"
   if (( step > 0 )); then
     inv "$VAULT" "$ADMIN_ID" -- rebalance --caller "$A" --instructions "[{\"Invest\":[\"$STRATEGY\",\"$step\"]}]" >/dev/null 2>&1 \
       && stamp "vault moved $step raw TUSDC into the strategy" || stamp "rebalance failed"
   fi
-  sidle="$(view "$USDC" -- balance --id "$STRATEGY" | raw)"
-  # Keeper buys are capped by max_swap (10,000 TUSDC).
-  step="$(py 'import sys; i,b=map(int,sys.argv[1:]); print(min(max(0,i-b), 10**11))' "$sidle" "$(units "$STRATEGY_BUFFER_USDC")")"
-  if (( step > 0 )); then
-    inv "$STRATEGY" "$KEEPER_ID" -- invest --usdc_amount "$step" >/dev/null 2>&1 \
-      && stamp "keeper bought TBOND with $step raw TUSDC" || stamp "keeper invest failed"
-  fi
+  # No keeper buys on the pool: they pay the pool's premium over NAV plus its fee, which
+  # shows up as a mark-to-market loss. Idle strategy USDC is invested OTC at the oracle rate
+  # instead (invest_otc), once a counterparty is allowlisted.
 }
 
 fees() {
