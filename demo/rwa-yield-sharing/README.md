@@ -15,6 +15,7 @@ and the infrastructure provider, and both users withdraw. Every transaction is i
 | TBOND (test tokenized bond, SEP-41) | [`CCIHNSP55BIAHKKDWU2JBXCKYR6WNZI52CVYUR6EL5V6SWGKNRS6DTVK`](https://stellar.expert/explorer/testnet/contract/CCIHNSP55BIAHKKDWU2JBXCKYR6WNZI52CVYUR6EL5V6SWGKNRS6DTVK) |
 | Reflector SEP-40 oracle (TBOND NAV in TUSDC) | [`CCOZLM6SPEDFUQ4CDRDKGFK35SE2DU6ZIGFYXLR5D5JNKRNU6MPFV6PL`](https://stellar.expert/explorer/testnet/contract/CCOZLM6SPEDFUQ4CDRDKGFK35SE2DU6ZIGFYXLR5D5JNKRNU6MPFV6PL) |
 | Sushi concentrated pool TBOND/TUSDC | [`CB2BMNBTHCEKFFUTR53UP6OI674D7SZ7NPIGPA7KPC4U43VWJOJQX6Y3`](https://stellar.expert/explorer/testnet/contract/CB2BMNBTHCEKFFUTR53UP6OI674D7SZ7NPIGPA7KPC4U43VWJOJQX6Y3) |
+| Test token faucet | [`CAH24OTCYNWGWO7EMXQOIBDKFCOM4UQDMGMHS45YQFZWQXE4CM7C455V`](https://stellar.expert/explorer/testnet/contract/CAH24OTCYNWGWO7EMXQOIBDKFCOM4UQDMGMHS45YQFZWQXE4CM7C455V) |
 
 Strategy wasm sha256: `3900fb6f1c2ec703eeacce3f9edd86cc23ebc5bcfed2eda15d9be7889e17fc1b`, built
 from `contracts/stablebond-wrapper-strategy` with `stellar contract build`.
@@ -46,6 +47,26 @@ Between steps the LP account arbitrages the pool toward NAV (`demo.sh arb`). A w
 needs to sell TBOND is bounded by `slippage_bps` around the oracle rate, so it reverts while the
 pool trades below NAV by more than that. This is the protection working as designed.
 
+## Try it yourself
+
+The deployment stays live after the scripted scenario. With any testnet wallet:
+
+1. Fund the account with testnet XLM from [Friendbot](https://friendbot.stellar.org).
+2. Claim 10,000 TUSDC and 1,000 TBOND from the faucet (`claim(to)`, once an hour per address),
+   from the dApp's "Get test tokens" card or the CLI.
+3. Deposit TUSDC into the vault, watch the share value follow the NAV, withdraw.
+
+`testnet/keeper.sh loop` keeps it moving every 30 minutes:
+- It grows the NAV at 5% a year and pushes it to the oracle.
+- It moves idle vault USDC into the strategy and has the keeper buy TBOND, keeping 5,000 TUSDC
+  idle in both the vault and the strategy for withdrawals.
+- It arbitrages the pool back within 50 bps of NAV.
+- Every 6 hours it runs the revenue share (report, lock fees, distribute).
+
+Admin, manager and keeper calls stay with the deployment's keys. OTC is keeper-only and a
+counterparty is allowlisted only after a 72-hour timelock: the LP account was proposed on
+2026-11-06 and becomes executable at 2026-11-09 10:59 UTC.
+
 ## Reproduce
 
 ```bash
@@ -61,6 +82,7 @@ for k in admin keeper issuer lp partner alice bob; do stellar keys generate ts-$
 ./demo.sh nav 200 && ./demo.sh fees
 ./demo.sh arb 15000 && ./demo.sh withdraw ts-bob all
 ./demo.sh status
+./keeper.sh loop                          # keep it live: NAV, pool, allocation, revenue share
 ```
 
 Reflector stops answering a price one resolution (1 h) after the last push, so run

@@ -32,13 +32,15 @@ Internal tracking doc. Maps every Tranche 1 deliverable to its evidence and list
 | Compatible with partner integrations | Done | Standard DeFindex vault interface; testnet dApp |
 | Testnet deployment | Done | `testnet.contracts.json`, `demo/rwa-yield-sharing/README.md` |
 | Test scenarios: deposits, accrual over time, attribution and sharing | Done | `demo/rwa-yield-sharing/run-log.md` (every tx hash) |
-| Testnet dApp | In progress | `app/` |
+| Testnet dApp | Done | `app/`: User tab (deposit, withdraw, revenue split) and Admin tab (rebalance, fees, keeper, oracle, mint) |
+| Live for reviewers | Done | Faucet (`testnet/faucet`), dApp "Get test tokens", `testnet/keeper.sh loop` keeps NAV, pool, allocation and revenue share moving |
 | Publish documentation | Open | The repo is private; decide where the docs are published |
 
 ## Testnet stack
 
 `testnet/setup.sh` deploys everything idempotently; `testnet/demo.sh` runs the scenario. Testnet-only
 helpers live outside the Cargo workspace so they never touch the strategy build:
+`testnet/faucet` (hands out pre-minted TUSDC and TBOND, once an hour per address),
 `testnet/test-token` (SEP-41 tokens: contract tokens need no trustlines, so the protocol fee
 receiver, an account we do not control, can be paid) and `testnet/sushi-factory-stub` (the pool
 reads its protocol fee from a factory).
